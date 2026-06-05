@@ -24,9 +24,11 @@ public class Main {
                     System.out.println(commandType + ": not found");
                     System.out.print("$ ");
 
-                }
+                    }
 
-            }
+                } else {
+                System.out.println(input + ": command not found");
+                 }
 
             }
     }
