@@ -1,37 +1,49 @@
+import java.io.File;
 import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        System.out.print("$ ");
         Scanner scanner = new Scanner(System.in);
+
         while (true) {
+            System.out.print("$ ");
             String input = scanner.nextLine();
 
             if (input.equals("exit")) {
                 break;
+
             } else if (input.startsWith("echo ")) {
-            System.out.println(input.substring(5));
-            System.out.print("$ ");
+                System.out.println(input.substring(5));
 
             } else if (input.startsWith("type ")) {
+                String command = input.substring(5);
 
-                String commandType = input.substring(5);
-                if (commandType.equals("echo")|| commandType.equals("type")|| commandType.equals("exit")) {
-                    System.out.println(commandType + " is a shell builtin");
-                    System.out.print("$ ");
-
+                if (command.equals("echo") || command.equals("exit") || command.equals("type")) {
+                    System.out.println(command + " is a shell builtin");
                 } else {
-                    System.out.println(commandType + ": not found");
-                    System.out.print("$ ");
+                    String path = System.getenv("PATH");
+                    String[] directories = path.split(File.pathSeparator);
 
+                    boolean found = false;
+
+                    for (String directory : directories) {
+                        File file = new File(directory, command);
+
+                        if (file.exists() && file.canExecute()) {
+                            System.out.println(command + " is " + file.getPath());
+                            found = true;
+                            break;
+                        }
                     }
 
-                } else {
+                    if (!found) {
+                        System.out.println(command + ": not found");
+                    }
+                }
+
+            } else {
                 System.out.println(input + ": command not found");
-                System.out.print("$ ");
-
             }
-
-            }
+        }
     }
 }
