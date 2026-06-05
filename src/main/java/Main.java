@@ -13,13 +13,21 @@ public class Main {
             System.out.println(input.substring(5));
             System.out.print("$ ");
 
-            } else {
+            } else if (input.startsWith("type ")) {
 
-                System.out.println(input + ": command not found");
-                System.out.print("$ ");
+                String commandType = input.substring(5);
+                if (commandType.equals("echo ")|| commandType.equals("type ")|| commandType.equals("exit ")) {
+                    System.out.println(commandType + "is a shell builtin");
+                    System.out.print("$ ");
+
+                } else {
+                    System.out.println(commandType + ": not found");
+                    System.out.print("$ ");
+
+                }
 
             }
 
-        }
+            }
     }
 }
