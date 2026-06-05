@@ -16,8 +16,8 @@ public class Main {
             } else if (input.startsWith("type ")) {
 
                 String commandType = input.substring(5);
-                if (commandType.equals("echo ")|| commandType.equals("type ")|| commandType.equals("exit ")) {
-                    System.out.println(commandType + "is a shell builtin");
+                if (commandType.equals("echo")|| commandType.equals("type")|| commandType.equals("exit")) {
+                    System.out.println(commandType + " is a shell builtin");
                     System.out.print("$ ");
 
                 } else {
