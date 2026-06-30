@@ -6,33 +6,31 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
 
         while (true) {
-            // 1. Show the shell prompt
+            // Show the shell prompt
             System.out.print("$ ");
 
-            // 2. Read the full line written by the user
+            // Read the full line written by the user
             String input = scanner.nextLine();
 
-            // 3. If the user writes an empty line, start again
+            // If the user writes an empty line, start again
             if (input.isBlank()) {
                 continue;
             }
 
-            // 4. Split the input into command and arguments
-            // Example: "custom_exe alice" -> ["custom_exe", "alice"]
+            // Split the input into command and arguments
             String[] parts = input.split("\\s+");
 
-            // 5. The command is always the first word
             String command = parts[0];
 
-            // 6. Builtin: exit
-            if (input.equals("exit") || input.equals("exit 0")) {
+            // Builtin: exit
+            if (input.equals("exit") || input.equals("0")) {
                 break;
 
-                // 7. Builtin: echo
+                //Builtin: echo
             } else if (input.startsWith("echo ")) {
                 System.out.println(input.substring(5));
 
-                // 8. Builtin: type
+                // Builtin: type
             } else if (input.startsWith("type ")) {
                 String commandType = input.substring(5);
 
@@ -48,7 +46,7 @@ public class Main {
                     }
                 }
 
-                // 9. External command
+                // External command
             } else {
                 File executable = findExecutable(command);
 
