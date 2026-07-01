@@ -1,8 +1,9 @@
 import java.io.File;
+import java.io.IOException;
 import java.util.Scanner;
 
 public class Main {
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws IOException, InterruptedException {
         Scanner scanner = new Scanner(System.in);
 
         while (true) {
@@ -46,8 +47,11 @@ public class Main {
                     }
                 }
 
-                // External command
-            } else {
+            } else if (input.startsWith("pwd ")) {
+                String path = System.getenv("PATH");
+                System.out.println(path);
+
+            } else {    // External command
                 File executable = findExecutable(command);
 
                 if (executable != null) {
@@ -86,11 +90,16 @@ public class Main {
     }
 
     // Runs an external program with its arguments
-    private static void runExternalCommand(String[] parts) throws Exception {
-        ProcessBuilder processBuilder = new ProcessBuilder(parts);
-        processBuilder.inheritIO();
+    private static void runExternalCommand(String[] parts) {
+       try {
+           ProcessBuilder processBuilder = new ProcessBuilder(parts);
+           processBuilder.inheritIO();
 
-        Process process = processBuilder.start();
-        process.waitFor();
+           Process process = processBuilder.start();
+           process.waitFor();
+       } catch (Exception e) {
+           System.err.println("Error running command: " + e.getMessage());
+       }
+
     }
 }
