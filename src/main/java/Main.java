@@ -75,13 +75,13 @@ public class Main {
                 File executable = findExecutable(command);
 
                 if (executable != null) {
-                    runExternalCommand(parts);
+                    runExternalCommand(parts, currentDirectory);
                 } else {
                     System.out.println(command + ": command not found");
                 }
             }
         }
-    }
+
 
     // Checks if a command is implemented inside our shell
     private static boolean isBuiltin(String command) {
