@@ -47,9 +47,8 @@ public class Main {
                     }
                 }
 
-            } else if (input.startsWith("pwd ")) {
-                String path = System.getenv("PATH");
-                System.out.println(path);
+            } else if (input.equals("pwd ")) {
+                System.out.println(System.getProperty("user.dir"));
 
             } else {    // External command
                 File executable = findExecutable(command);
