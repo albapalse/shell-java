@@ -56,6 +56,10 @@ public class Main {
             } else if (input.startsWith("cd ")) {
                 String targetPath = parts[1];
 
+                if (targetPath.equals("~")) {
+                    targetPath = System.getenv("HOME");
+                }
+
                 File targetDirectory = new File(targetPath);
 
                 if (!targetDirectory.isAbsolute()) {
