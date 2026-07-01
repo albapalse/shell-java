@@ -69,7 +69,6 @@ public class Main {
                 } else {
                     System.out.println("cd: " + targetPath + ": No such file or directory");
                 }
-            }
 
             } else {    // External command
                 File executable = findExecutable(command);
@@ -81,7 +80,7 @@ public class Main {
                 }
             }
         }
-
+    }
 
     // Checks if a command is implemented inside our shell
     private static boolean isBuiltin(String command) {
