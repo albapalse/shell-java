@@ -53,9 +53,10 @@ public class Main {
             } else if (input.equals("pwd")) {
                 System.out.println(currentDirectory.getAbsolutePath());
 
-            }  else if (input.startsWith("cd ")) {
+            } else if (input.startsWith("cd ")) {
                 String targetPath = parts[1];
-                File targetDirectory = new File(targetPath);
+
+                File targetDirectory = new File(currentDirectory, targetPath).getCanonicalFile();
 
                 if (targetDirectory.exists() && targetDirectory.isDirectory()) {
                     currentDirectory = targetDirectory;
@@ -63,7 +64,8 @@ public class Main {
                     System.out.println("cd: " + targetPath + ": No such file or directory");
                 }
 
-        } else {    // External command
+
+            } else {    // External command
                 File executable = findExecutable(command);
 
                 if (executable != null) {
