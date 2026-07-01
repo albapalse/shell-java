@@ -65,7 +65,7 @@ public class Main {
 
     // Checks if a command is implemented inside our shell
     private static boolean isBuiltin(String command) {
-        return command.equals("echo") || command.equals("exit") || command.equals("type");
+        return command.equals("echo") || command.equals("exit") || command.equals("type")|| command.equals("pwd");
     }
 
     // Searches for a command in PATH
