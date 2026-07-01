@@ -6,6 +6,9 @@ public class Main {
     public static void main(String[] args) throws IOException, InterruptedException {
         Scanner scanner = new Scanner(System.in);
 
+        File currentDirectory = new File(System.getProperty("user.dir"));
+
+
         while (true) {
             // Show the shell prompt
             System.out.print("$ ");
@@ -48,9 +51,19 @@ public class Main {
                 }
 
             } else if (input.equals("pwd")) {
-                System.out.println(System.getProperty("user.dir"));
+                System.out.println(currentDirectory.getAbsolutePath());
 
-            } else {    // External command
+            }  else if (input.startsWith("cd ")) {
+                String targetPath = parts[1];
+                File targetDirectory = new File(targetPath);
+
+                if (targetDirectory.exists() && targetDirectory.isDirectory()) {
+                    currentDirectory = targetDirectory;
+                } else {
+                    System.out.println("cd: " + targetPath + ": No such file or directory");
+                }
+
+        } else {    // External command
                 File executable = findExecutable(command);
 
                 if (executable != null) {
@@ -64,7 +77,7 @@ public class Main {
 
     // Checks if a command is implemented inside our shell
     private static boolean isBuiltin(String command) {
-        return command.equals("echo") || command.equals("exit") || command.equals("type")|| command.equals("pwd");
+        return command.equals("echo") || command.equals("exit") || command.equals("type")|| command.equals("pwd") || command.equals("cd");
     }
 
     // Searches for a command in PATH
