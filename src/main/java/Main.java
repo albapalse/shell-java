@@ -47,7 +47,7 @@ public class Main {
                     }
                 }
 
-            } else if (input.equals("pwd ")) {
+            } else if (input.equals("pwd")) {
                 System.out.println(System.getProperty("user.dir"));
 
             } else {    // External command
