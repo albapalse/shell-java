@@ -56,14 +56,20 @@ public class Main {
             } else if (input.startsWith("cd ")) {
                 String targetPath = parts[1];
 
-                File targetDirectory = new File(currentDirectory, targetPath).getCanonicalFile();
+                File targetDirectory = new File(targetPath);
+
+                if (!targetDirectory.isAbsolute()) {
+                    targetDirectory = new File(currentDirectory, targetPath);
+                }
+
+                targetDirectory = targetDirectory.getCanonicalFile();
 
                 if (targetDirectory.exists() && targetDirectory.isDirectory()) {
                     currentDirectory = targetDirectory;
                 } else {
                     System.out.println("cd: " + targetPath + ": No such file or directory");
                 }
-
+            }
 
             } else {    // External command
                 File executable = findExecutable(command);
@@ -104,16 +110,16 @@ public class Main {
     }
 
     // Runs an external program with its arguments
-    private static void runExternalCommand(String[] parts) {
-       try {
-           ProcessBuilder processBuilder = new ProcessBuilder(parts);
-           processBuilder.inheritIO();
+    private static void runExternalCommand(String[] parts, File currentDirectory) {
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder(parts);
+            processBuilder.directory(currentDirectory);
+            processBuilder.inheritIO();
 
-           Process process = processBuilder.start();
-           process.waitFor();
-       } catch (Exception e) {
-           System.err.println("Error running command: " + e.getMessage());
-       }
-
+            Process process = processBuilder.start();
+            process.waitFor();
+        } catch (Exception e) {
+            System.err.println("Error running command: " + e.getMessage());
+        }
     }
 }
