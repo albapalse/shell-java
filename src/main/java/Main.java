@@ -1,6 +1,8 @@
 import java.io.File;
 import java.io.IOException;
 import java.util.Scanner;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Main {
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -22,21 +24,31 @@ public class Main {
             }
 
             // Split the input into command and arguments
-            String[] parts = input.split("\\s+");
+            String[] parts = parseArguments(input);
 
             String command = parts[0];
 
             // Builtin: exit
-            if (input.equals("exit") || input.equals("0")) {
+            if (command.equals("exit") || command.equals("0")) {
                 break;
 
                 //Builtin: echo
-            } else if (input.startsWith("echo ")) {
-                System.out.println(input.substring(5));
+            } else if (command.equals("echo")) {
+                StringBuilder output = new StringBuilder();
+
+                for (int i = 1; i < parts.length; i++) {
+                    if (i > 1) {
+                        output.append(" ");
+                    }
+
+                    output.append(parts[i]);
+                }
+
+                System.out.println(output);
 
                 // Builtin: type
-            } else if (input.startsWith("type ")) {
-                String commandType = input.substring(5);
+            } else if (command.equals("type")) {
+                String commandType = parts[1];
 
                 if (isBuiltin(commandType)) {
                     System.out.println(commandType + " is a shell builtin");
@@ -50,10 +62,10 @@ public class Main {
                     }
                 }
 
-            } else if (input.equals("pwd")) {
+            } else if (command.equals("pwd")) {
                 System.out.println(currentDirectory.getAbsolutePath());
 
-            } else if (input.startsWith("cd ")) {
+            } else if (command.equals("cd")) {
                 String targetPath = parts[1];
 
                 if (targetPath.equals("~")) {
@@ -124,5 +136,36 @@ public class Main {
         } catch (Exception e) {
             System.err.println("Error running command: " + e.getMessage());
         }
+    }
+
+
+    private static String[] parseArguments(String input) {
+        List<String> arguments = new ArrayList<>();
+        StringBuilder currentArgument = new StringBuilder();
+
+        boolean insideSingleQuotes = false;
+
+        for (int i = 0; i < input.length(); i++) {
+            char currentChar = input.charAt(i);
+
+            if (currentChar == '\'') {
+                insideSingleQuotes = !insideSingleQuotes;
+
+            } else if (Character.isWhitespace(currentChar) && !insideSingleQuotes) {
+                if (currentArgument.length() > 0) {
+                    arguments.add(currentArgument.toString());
+                    currentArgument.setLength(0);
+                }
+
+            } else {
+                currentArgument.append(currentChar);
+            }
+        }
+
+        if (currentArgument.length() > 0) {
+            arguments.add(currentArgument.toString());
+        }
+
+        return arguments.toArray(new String[0]);
     }
 }
