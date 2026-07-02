@@ -144,14 +144,19 @@ public class Main {
         StringBuilder currentArgument = new StringBuilder();
 
         boolean insideSingleQuotes = false;
+        boolean insideDoubleQuotes = false;
 
         for (int i = 0; i < input.length(); i++) {
             char currentChar = input.charAt(i);
 
-            if (currentChar == '\'') {
+            if (currentChar == '\'' && !insideDoubleQuotes) {
                 insideSingleQuotes = !insideSingleQuotes;
 
-            } else if (Character.isWhitespace(currentChar) && !insideSingleQuotes) {
+            } else if (currentChar == '"' && !insideSingleQuotes) {
+
+                insideDoubleQuotes = !insideDoubleQuotes;
+
+            } else if (Character.isWhitespace(currentChar) && !insideSingleQuotes && !insideDoubleQuotes) {
                 if (currentArgument.length() > 0) {
                     arguments.add(currentArgument.toString());
                     currentArgument.setLength(0);
