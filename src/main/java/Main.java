@@ -167,6 +167,20 @@ public class Main {
                     currentArgument.setLength(0);
                 }
 
+            } else if (currentChar == '\\' && insideDoubleQuotes) {
+                if (i + 1 < input.length()) {
+                    char nextChar = input.charAt(i + 1);
+
+                    if (nextChar == '"' || nextChar == '\\') {
+                        currentArgument.append(nextChar);
+                        i++;
+                    } else {
+                        currentArgument.append(currentChar);
+                    }
+                } else {
+                    currentArgument.append(currentChar);
+                }
+
             } else {
                 currentArgument.append(currentChar);
             }
