@@ -149,7 +149,12 @@ public class Main {
         for (int i = 0; i < input.length(); i++) {
             char currentChar = input.charAt(i);
 
-            if (currentChar == '\'' && !insideDoubleQuotes) {
+            if (currentChar == '\\' && !insideSingleQuotes && !insideDoubleQuotes) {
+                if (i + 1 < input.length()) {
+                    currentArgument.append(input.charAt(++i));
+                }
+
+            } else if (currentChar == '\'' && !insideDoubleQuotes) {
                 insideSingleQuotes = !insideSingleQuotes;
 
             } else if (currentChar == '"' && !insideSingleQuotes) {
