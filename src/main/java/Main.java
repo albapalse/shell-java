@@ -31,7 +31,7 @@ public class Main {
 
             for (int i = 0; i < parts.length; i++) {
 
-                if (parts[i].equals(">") || parts[i].equals("1>") || parts[i].equals("2>") || parts[i].equals(">>") || parts[i].equals("1>>")) {
+                if (parts[i].equals(">") || parts[i].equals("1>") || parts[i].equals("2>") || parts[i].equals(">>") || parts[i].equals("1>>")|| parts[i].equals("2>>")) {
                     redirectIndex = i;
                     redirectOperator = parts[i];
                     break;
@@ -41,6 +41,7 @@ public class Main {
             File stdoutFile = null;
             File stderrFile = null;
             boolean appendStdout = false;
+            boolean appendStderr = false;
 
 
             if (redirectIndex != -1) {
@@ -55,11 +56,15 @@ public class Main {
 
                 } else if (redirectOperator.equals("2>")) {
                     stderrFile = redirectFile;
+
                 }  else if (redirectOperator.equals(">>") || redirectOperator.equals("1>>")) {
                     appendStdout = true;
                     stdoutFile = redirectFile;
 
-                }
+                } else if (redirectOperator.equals("2>>")) {
+                stderrFile = redirectFile;
+                appendStderr = true;
+            }
 
 
             }
@@ -108,7 +113,16 @@ public class Main {
                 }
 
                 if (stderrFile != null) {
-                    Files.writeString(stderrFile.toPath(), "");
+                    if (appendStderr) {
+                        Files.writeString(
+                                stderrFile.toPath(),
+                                "",
+                                StandardOpenOption.CREATE,
+                                StandardOpenOption.APPEND
+                        );
+                    } else {
+                        Files.writeString(stderrFile.toPath(), "");
+                    }
                 }
 
             } else if (command.equals("type")) {
@@ -152,7 +166,7 @@ public class Main {
                 File executable = findExecutable(command);
 
                 if (executable != null) {
-                    runExternalCommand(commandParts, currentDirectory, stdoutFile, stderrFile, appendStdout);
+                    runExternalCommand(commandParts, currentDirectory, stdoutFile, stderrFile, appendStdout, appendStderr);
                 } else {
                     System.out.println(command + ": command not found");
                 }
@@ -187,7 +201,14 @@ public class Main {
     }
 
     // Runs an external program with its arguments
-    private static void runExternalCommand(String[] parts, File currentDirectory, File stdoutFile, File stderrFile, boolean appendStdout) {
+    private static void runExternalCommand(
+            String[] parts,
+            File currentDirectory,
+            File stdoutFile,
+            File stderrFile,
+            boolean appendStdout,
+            boolean appendStderr
+    ) {
         try {
             ProcessBuilder processBuilder = new ProcessBuilder(parts);
             processBuilder.directory(currentDirectory);
@@ -205,7 +226,11 @@ public class Main {
             }
 
             if (stderrFile != null) {
-                processBuilder.redirectError(stderrFile);
+                if (appendStderr) {
+                    processBuilder.redirectError(ProcessBuilder.Redirect.appendTo(stderrFile));
+                } else {
+                    processBuilder.redirectError(stderrFile);
+                }
             } else {
                 processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
             }
@@ -217,7 +242,6 @@ public class Main {
             System.err.println("Error running command: " + e.getMessage());
         }
     }
-
 
     private static String[] parseArguments(String input) {
         List<String> arguments = new ArrayList<>();
