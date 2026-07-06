@@ -26,22 +26,34 @@ public class Main {
 
 
             int redirectIndex = -1;
+            String redirectOperator = null;
 
             for (int i = 0; i < parts.length; i++) {
-                if (parts[i].equals(">") || parts[i].equals("1>")) {
+
+                if (parts[i].equals(">") || parts[i].equals("1>") || parts[i].equals("2>")) {
                     redirectIndex = i;
+                    redirectOperator = parts[i];
                     break;
                 }
             }
 
-            File outputFile = null;
+            File stdoutFile = null;
+            File stderrFile = null;
 
             if (redirectIndex != -1) {
-                outputFile = new File(parts[redirectIndex + 1]);
+                File redirectFile = new File(parts[redirectIndex + 1]);
 
-                if (!outputFile.isAbsolute()) {
-                    outputFile = new File(currentDirectory, parts[redirectIndex + 1]);
+                if (!redirectFile.isAbsolute()) {
+                    redirectFile = new File(currentDirectory, parts[redirectIndex + 1]);
                 }
+
+                if (redirectOperator.equals(">") || redirectOperator.equals("1>")) {
+                    stdoutFile = redirectFile;
+                } else if (redirectOperator.equals("2>")) {
+                    stderrFile = redirectFile;
+                }
+
+
             }
 
             String[] commandParts = parts;
@@ -70,10 +82,14 @@ public class Main {
 
                     output.append(commandParts[i]);
                 }
-                if (outputFile != null) {
-                    Files.writeString(outputFile.toPath(), output.toString() + System.lineSeparator());
+                if (stdoutFile != null) {
+                    Files.writeString(stdoutFile.toPath(), output.toString() + System.lineSeparator());
                 } else {
                     System.out.println(output);
+                }
+
+                if (stderrFile != null) {
+                    Files.writeString(stderrFile.toPath(), "");
                 }
 
             } else if (command.equals("type")) {
@@ -117,7 +133,7 @@ public class Main {
                 File executable = findExecutable(command);
 
                 if (executable != null) {
-                    runExternalCommand(commandParts, currentDirectory, outputFile);
+                    runExternalCommand(commandParts, currentDirectory, stdoutFile, stderrFile);
                 } else {
                     System.out.println(command + ": command not found");
                 }
@@ -152,19 +168,28 @@ public class Main {
     }
 
     // Runs an external program with its arguments
-    private static void runExternalCommand(String[] parts, File currentDirectory, File outputFile) {
+    private static void runExternalCommand(String[] parts, File currentDirectory, File stdoutFile, File stderrFile) {
         try {
             ProcessBuilder processBuilder = new ProcessBuilder(parts);
             processBuilder.directory(currentDirectory);
-            if (outputFile != null) {
-                processBuilder.redirectOutput(outputFile);
-                processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
-                processBuilder.redirectInput(ProcessBuilder.Redirect.INHERIT);
+
+            processBuilder.redirectInput(ProcessBuilder.Redirect.INHERIT);
+
+            if (stdoutFile != null) {
+                processBuilder.redirectOutput(stdoutFile);
             } else {
-                processBuilder.inheritIO();
+                processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
             }
+
+            if (stderrFile != null) {
+                processBuilder.redirectError(stderrFile);
+            } else {
+                processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
+            }
+
             Process process = processBuilder.start();
             process.waitFor();
+
         } catch (Exception e) {
             System.err.println("Error running command: " + e.getMessage());
         }
