@@ -145,7 +145,7 @@ public class Main {
                 File executable = findExecutable(command);
 
                 if (executable != null) {
-                    runExternalCommand(commandParts, currentDirectory, stdoutFile, stderrFile);
+                    runExternalCommand(commandParts, currentDirectory, stdoutFile, stderrFile, appendStdout);
                 } else {
                     System.out.println(command + ": command not found");
                 }
