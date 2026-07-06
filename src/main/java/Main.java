@@ -7,7 +7,7 @@ import java.util.List;
 import java.nio.file.StandardOpenOption;
 
 public class Main {
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) throws IOException {
         Scanner scanner = new Scanner(System.in);
 
         File currentDirectory = new File(System.getProperty("user.dir"));
@@ -81,6 +81,13 @@ public class Main {
 
             } else if (command.equals("echo")) {
                 StringBuilder output = new StringBuilder();
+                for (int i = 1; i < commandParts.length; i++) {
+                    if (i > 1) {
+                        output.append(" ");
+                    }
+
+                    output.append(commandParts[i]);
+                }
 
                 if (stdoutFile != null) {
                     if (appendStdout) {
