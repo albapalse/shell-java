@@ -1,4 +1,5 @@
 import java.io.File;
+import java.nio.file.Files;
 import java.io.IOException;
 import java.util.Scanner;
 import java.util.ArrayList;
@@ -12,13 +13,10 @@ public class Main {
 
 
         while (true) {
-            // Show the shell prompt
             System.out.print("$ ");
-
-            // Read the full line written by the user
             String input = scanner.nextLine();
 
-            // If the user writes an empty line, start again
+
             if (input.isBlank()) {
                 continue;
             }
@@ -26,30 +24,60 @@ public class Main {
             // Split the input into command and arguments
             String[] parts = parseArguments(input);
 
+
+            int redirectIndex = -1;
+
+            for (int i = 0; i < parts.length; i++) {
+                if (parts[i].equals(">") || parts[i].equals("1>")) {
+                    redirectIndex = i;
+                    break;
+                }
+            }
+
+            File outputFile = null;
+
+            if (redirectIndex != -1) {
+                outputFile = new File(parts[redirectIndex + 1]);
+
+                if (!outputFile.isAbsolute()) {
+                    outputFile = new File(currentDirectory, parts[redirectIndex + 1]);
+                }
+            }
+
+            String[] commandParts = parts;
+
+            if (redirectIndex != -1) {
+                commandParts = new String[redirectIndex];
+
+                for (int i = 0; i < redirectIndex; i++) {
+                    commandParts[i] = parts[i];
+                }
+            }
+
             String command = parts[0];
 
-            // Builtin: exit
+
             if (command.equals("exit") || command.equals("0")) {
                 break;
 
-                //Builtin: echo
             } else if (command.equals("echo")) {
                 StringBuilder output = new StringBuilder();
 
-                for (int i = 1; i < parts.length; i++) {
+                for (int i = 1; i < commandParts.length; i++) {
                     if (i > 1) {
                         output.append(" ");
                     }
 
-                    output.append(parts[i]);
+                    output.append(commandParts[i]);
+                }
+                if (outputFile != null) {
+                    Files.writeString(outputFile.toPath(), output.toString() + System.lineSeparator());
+                } else {
+                    System.out.println(output);
                 }
 
-                System.out.println(output);
-
-                // Builtin: type
             } else if (command.equals("type")) {
-                String commandType = parts[1];
-
+                String commandType = commandParts[1];
                 if (isBuiltin(commandType)) {
                     System.out.println(commandType + " is a shell builtin");
                 } else {
@@ -66,8 +94,7 @@ public class Main {
                 System.out.println(currentDirectory.getAbsolutePath());
 
             } else if (command.equals("cd")) {
-                String targetPath = parts[1];
-
+                String targetPath = commandParts[1];
                 if (targetPath.equals("~")) {
                     targetPath = System.getenv("HOME");
                 }
@@ -90,7 +117,7 @@ public class Main {
                 File executable = findExecutable(command);
 
                 if (executable != null) {
-                    runExternalCommand(parts, currentDirectory);
+                    runExternalCommand(commandParts, currentDirectory, outputFile);
                 } else {
                     System.out.println(command + ": command not found");
                 }
@@ -125,12 +152,17 @@ public class Main {
     }
 
     // Runs an external program with its arguments
-    private static void runExternalCommand(String[] parts, File currentDirectory) {
+    private static void runExternalCommand(String[] parts, File currentDirectory, File outputFile) {
         try {
             ProcessBuilder processBuilder = new ProcessBuilder(parts);
             processBuilder.directory(currentDirectory);
-            processBuilder.inheritIO();
-
+            if (outputFile != null) {
+                processBuilder.redirectOutput(outputFile);
+                processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
+                processBuilder.redirectInput(ProcessBuilder.Redirect.INHERIT);
+            } else {
+                processBuilder.inheritIO();
+            }
             Process process = processBuilder.start();
             process.waitFor();
         } catch (Exception e) {
