@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Scanner;
 import java.util.ArrayList;
 import java.util.List;
+import java.nio.file.StandardOpenOption;
 
 public class Main {
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -30,7 +31,7 @@ public class Main {
 
             for (int i = 0; i < parts.length; i++) {
 
-                if (parts[i].equals(">") || parts[i].equals("1>") || parts[i].equals("2>")) {
+                if (parts[i].equals(">") || parts[i].equals("1>") || parts[i].equals("2>") || parts[i].equals(">>") || parts[i].equals("1>>")) {
                     redirectIndex = i;
                     redirectOperator = parts[i];
                     break;
@@ -39,6 +40,8 @@ public class Main {
 
             File stdoutFile = null;
             File stderrFile = null;
+            boolean appendStdout = false;
+
 
             if (redirectIndex != -1) {
                 File redirectFile = new File(parts[redirectIndex + 1]);
@@ -49,8 +52,13 @@ public class Main {
 
                 if (redirectOperator.equals(">") || redirectOperator.equals("1>")) {
                     stdoutFile = redirectFile;
+
                 } else if (redirectOperator.equals("2>")) {
                     stderrFile = redirectFile;
+                }  else if (redirectOperator.equals(">>") || redirectOperator.equals("1>>")) {
+                    appendStdout = true;
+                    stdoutFile = redirectFile;
+
                 }
 
 
@@ -66,8 +74,7 @@ public class Main {
                 }
             }
 
-            String command = parts[0];
-
+            String command = commandParts[0];
 
             if (command.equals("exit") || command.equals("0")) {
                 break;
@@ -75,15 +82,20 @@ public class Main {
             } else if (command.equals("echo")) {
                 StringBuilder output = new StringBuilder();
 
-                for (int i = 1; i < commandParts.length; i++) {
-                    if (i > 1) {
-                        output.append(" ");
-                    }
-
-                    output.append(commandParts[i]);
-                }
                 if (stdoutFile != null) {
-                    Files.writeString(stdoutFile.toPath(), output.toString() + System.lineSeparator());
+                    if (appendStdout) {
+                        Files.writeString(
+                                stdoutFile.toPath(),
+                                output.toString() + System.lineSeparator(),
+                                StandardOpenOption.CREATE,
+                                StandardOpenOption.APPEND
+                        );
+                    } else {
+                        Files.writeString(
+                                stdoutFile.toPath(),
+                                output.toString() + System.lineSeparator()
+                        );
+                    }
                 } else {
                     System.out.println(output);
                 }
@@ -168,7 +180,7 @@ public class Main {
     }
 
     // Runs an external program with its arguments
-    private static void runExternalCommand(String[] parts, File currentDirectory, File stdoutFile, File stderrFile) {
+    private static void runExternalCommand(String[] parts, File currentDirectory, File stdoutFile, File stderrFile, boolean appendStdout) {
         try {
             ProcessBuilder processBuilder = new ProcessBuilder(parts);
             processBuilder.directory(currentDirectory);
@@ -176,7 +188,11 @@ public class Main {
             processBuilder.redirectInput(ProcessBuilder.Redirect.INHERIT);
 
             if (stdoutFile != null) {
-                processBuilder.redirectOutput(stdoutFile);
+                if (appendStdout) {
+                    processBuilder.redirectOutput(ProcessBuilder.Redirect.appendTo(stdoutFile));
+                } else {
+                    processBuilder.redirectOutput(stdoutFile);
+                }
             } else {
                 processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
             }
