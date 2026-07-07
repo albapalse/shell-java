@@ -200,6 +200,12 @@ public class Main {
                 File executable = findExecutable(command);
 
                 if (executable != null) {
+                    int jobNumber = 0;
+
+                    if (background) {
+                        jobNumber = getNextJobNumber(jobs);
+                    }
+
                     Process process = runExternalCommand(
                             commandParts,
                             currentDirectory,
@@ -208,13 +214,12 @@ public class Main {
                             appendStdout,
                             appendStderr,
                             background,
-                            nextJobNumber
+                            jobNumber
                     );
 
                     if (background && process != null) {
                         String jobCommand = String.join(" ", commandParts);
-                        jobs.add(new Job(nextJobNumber, process, jobCommand));
-                        nextJobNumber++;
+                        jobs.add(new Job(jobNumber, process, jobCommand));
                     }
 
                 } else {
@@ -383,6 +388,18 @@ public class Main {
             System.err.println("Error running command: " + e.getMessage());
             return null;
         }
+    }
+
+    private static int getNextJobNumber(List<Job> jobs) {
+        int highestJobNumber = 0;
+
+        for (Job job : jobs) {
+            if (job.jobNumber > highestJobNumber) {
+                highestJobNumber = job.jobNumber;
+            }
+        }
+
+        return highestJobNumber + 1;
     }
 
     private static String[] parseArguments(String input) {
