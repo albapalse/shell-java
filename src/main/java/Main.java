@@ -8,7 +8,6 @@ import java.nio.file.StandardOpenOption;
 
 public class Main {
 
-
     private static class Job {
         final int jobNumber;
         final Process process;
@@ -21,7 +20,6 @@ public class Main {
         }
     }
 
-
     public static void main(String[] args) throws IOException {
         Scanner scanner = new Scanner(System.in);
 
@@ -30,17 +28,16 @@ public class Main {
         List<Job> jobs = new ArrayList<>();
 
         while (true) {
+            reapCompletedJobs(jobs);
+
             System.out.print("$ ");
             String input = scanner.nextLine();
-
 
             if (input.isBlank()) {
                 continue;
             }
 
-            // Split the input into command and arguments
             String[] parts = parseArguments(input);
-
 
             boolean background = false;
 
@@ -56,13 +53,16 @@ public class Main {
                 parts = withoutAmpersand;
             }
 
-
             int redirectIndex = -1;
             String redirectOperator = null;
 
             for (int i = 0; i < parts.length; i++) {
-
-                if (parts[i].equals(">") || parts[i].equals("1>") || parts[i].equals("2>") || parts[i].equals(">>") || parts[i].equals("1>>") || parts[i].equals("2>>")) {
+                if (parts[i].equals(">")
+                        || parts[i].equals("1>")
+                        || parts[i].equals("2>")
+                        || parts[i].equals(">>")
+                        || parts[i].equals("1>>")
+                        || parts[i].equals("2>>")) {
                     redirectIndex = i;
                     redirectOperator = parts[i];
                     break;
@@ -73,7 +73,6 @@ public class Main {
             File stderrFile = null;
             boolean appendStdout = false;
             boolean appendStderr = false;
-
 
             if (redirectIndex != -1) {
                 File redirectFile = new File(parts[redirectIndex + 1]);
@@ -89,15 +88,13 @@ public class Main {
                     stderrFile = redirectFile;
 
                 } else if (redirectOperator.equals(">>") || redirectOperator.equals("1>>")) {
-                    appendStdout = true;
                     stdoutFile = redirectFile;
+                    appendStdout = true;
 
                 } else if (redirectOperator.equals("2>>")) {
                     stderrFile = redirectFile;
                     appendStderr = true;
                 }
-
-
             }
 
             String[] commandParts = parts;
@@ -117,6 +114,7 @@ public class Main {
 
             } else if (command.equals("echo")) {
                 StringBuilder output = new StringBuilder();
+
                 for (int i = 1; i < commandParts.length; i++) {
                     if (i > 1) {
                         output.append(" ");
@@ -158,6 +156,7 @@ public class Main {
 
             } else if (command.equals("type")) {
                 String commandType = commandParts[1];
+
                 if (isBuiltin(commandType)) {
                     System.out.println(commandType + " is a shell builtin");
                 } else {
@@ -175,6 +174,7 @@ public class Main {
 
             } else if (command.equals("cd")) {
                 String targetPath = commandParts[1];
+
                 if (targetPath.equals("~")) {
                     targetPath = System.getenv("HOME");
                 }
@@ -191,53 +191,12 @@ public class Main {
                     currentDirectory = targetDirectory;
                 } else {
                     System.out.println("cd: " + targetPath + ": No such file or directory");
-
                 }
 
             } else if (command.equals("jobs")) {
-                List<Job> completedJobs = new ArrayList<>();
+                printJobs(jobs);
 
-                int currentJobNumber = -1;
-                int previousJobNumber = -1;
-
-                for (Job job : jobs) {
-                    if (job.jobNumber > currentJobNumber) {
-                        previousJobNumber = currentJobNumber;
-                        currentJobNumber = job.jobNumber;
-                    } else if (job.jobNumber > previousJobNumber) {
-                        previousJobNumber = job.jobNumber;
-                    }
-                }
-
-                for (Job job : jobs) {
-                    char marker = ' ';
-
-                    if (job.jobNumber == currentJobNumber) {
-                        marker = '+';
-                    } else if (job.jobNumber == previousJobNumber) {
-                        marker = '-';
-                    }
-
-                    if (job.process.isAlive()) {
-                        System.out.printf("[%d]%c  %-24s%s &%n",
-                                job.jobNumber,
-                                marker,
-                                "Running",
-                                job.command);
-                    } else {
-                        System.out.printf("[%d]%c  %-24s%s%n",
-                                job.jobNumber,
-                                marker,
-                                "Done",
-                                job.command);
-
-                        completedJobs.add(job);
-                    }
-                }
-
-                jobs.removeAll(completedJobs);
-
-            } else {    // External command
+            } else {
                 File executable = findExecutable(command);
 
                 if (executable != null) {
@@ -251,6 +210,7 @@ public class Main {
                             background,
                             nextJobNumber
                     );
+
                     if (background && process != null) {
                         String jobCommand = String.join(" ", commandParts);
                         jobs.add(new Job(nextJobNumber, process, jobCommand));
@@ -264,12 +224,15 @@ public class Main {
         }
     }
 
-    // Checks if a command is implemented inside our shell
     private static boolean isBuiltin(String command) {
-        return command.equals("echo") || command.equals("exit") || command.equals("type") || command.equals("pwd") || command.equals("cd") || command.equals("jobs");
+        return command.equals("echo")
+                || command.equals("exit")
+                || command.equals("type")
+                || command.equals("pwd")
+                || command.equals("cd")
+                || command.equals("jobs");
     }
 
-    // Searches for a command in PATH
     private static File findExecutable(String command) {
         String path = System.getenv("PATH");
 
@@ -290,7 +253,86 @@ public class Main {
         return null;
     }
 
-    // Runs an external program with its arguments
+    private static char getJobMarker(List<Job> jobs, int jobNumber) {
+        int currentJobNumber = -1;
+        int previousJobNumber = -1;
+
+        for (Job job : jobs) {
+            if (job.jobNumber > currentJobNumber) {
+                previousJobNumber = currentJobNumber;
+                currentJobNumber = job.jobNumber;
+            } else if (job.jobNumber > previousJobNumber) {
+                previousJobNumber = job.jobNumber;
+            }
+        }
+
+        if (jobNumber == currentJobNumber) {
+            return '+';
+        } else if (jobNumber == previousJobNumber) {
+            return '-';
+        } else {
+            return ' ';
+        }
+    }
+
+    private static void printJobs(List<Job> jobs) {
+        List<Job> completedJobs = new ArrayList<>();
+
+        for (Job job : jobs) {
+            char marker = getJobMarker(jobs, job.jobNumber);
+
+            if (job.process.isAlive()) {
+                System.out.printf("[%d]%c  %-24s%s &%n",
+                        job.jobNumber,
+                        marker,
+                        "Running",
+                        job.command);
+            } else {
+                try {
+                    job.process.waitFor();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+
+                System.out.printf("[%d]%c  %-24s%s%n",
+                        job.jobNumber,
+                        marker,
+                        "Done",
+                        job.command);
+
+                completedJobs.add(job);
+            }
+        }
+
+        jobs.removeAll(completedJobs);
+    }
+
+    private static void reapCompletedJobs(List<Job> jobs) {
+        List<Job> completedJobs = new ArrayList<>();
+
+        for (Job job : jobs) {
+            if (!job.process.isAlive()) {
+                char marker = getJobMarker(jobs, job.jobNumber);
+
+                try {
+                    job.process.waitFor();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+
+                System.out.printf("[%d]%c  %-24s%s%n",
+                        job.jobNumber,
+                        marker,
+                        "Done",
+                        job.command);
+
+                completedJobs.add(job);
+            }
+        }
+
+        jobs.removeAll(completedJobs);
+    }
+
     private static Process runExternalCommand(
             String[] parts,
             File currentDirectory,
@@ -362,7 +404,6 @@ public class Main {
                 insideSingleQuotes = !insideSingleQuotes;
 
             } else if (currentChar == '"' && !insideSingleQuotes) {
-
                 insideDoubleQuotes = !insideDoubleQuotes;
 
             } else if (Character.isWhitespace(currentChar) && !insideSingleQuotes && !insideDoubleQuotes) {
@@ -396,5 +437,4 @@ public class Main {
 
         return arguments.toArray(new String[0]);
     }
-
 }
