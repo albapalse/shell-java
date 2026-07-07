@@ -62,7 +62,7 @@ public class Main {
 
             for (int i = 0; i < parts.length; i++) {
 
-                if (parts[i].equals(">") || parts[i].equals("1>") || parts[i].equals("2>") || parts[i].equals(">>") || parts[i].equals("1>>")|| parts[i].equals("2>>")) {
+                if (parts[i].equals(">") || parts[i].equals("1>") || parts[i].equals("2>") || parts[i].equals(">>") || parts[i].equals("1>>") || parts[i].equals("2>>")) {
                     redirectIndex = i;
                     redirectOperator = parts[i];
                     break;
@@ -88,14 +88,14 @@ public class Main {
                 } else if (redirectOperator.equals("2>")) {
                     stderrFile = redirectFile;
 
-                }  else if (redirectOperator.equals(">>") || redirectOperator.equals("1>>")) {
+                } else if (redirectOperator.equals(">>") || redirectOperator.equals("1>>")) {
                     appendStdout = true;
                     stdoutFile = redirectFile;
 
                 } else if (redirectOperator.equals("2>>")) {
-                stderrFile = redirectFile;
-                appendStderr = true;
-            }
+                    stderrFile = redirectFile;
+                    appendStderr = true;
+                }
 
 
             }
@@ -195,26 +195,38 @@ public class Main {
                 }
 
             } else if (command.equals("jobs")) {
+                List<Job> completedJobs = new ArrayList<>();
+
                 int currentJobNumber = nextJobNumber - 1;
                 int previousJobNumber = nextJobNumber - 2;
 
                 for (Job job : jobs) {
+                    char marker = ' ';
+
+                    if (job.jobNumber == currentJobNumber) {
+                        marker = '+';
+                    } else if (job.jobNumber == previousJobNumber) {
+                        marker = '-';
+                    }
+
                     if (job.process.isAlive()) {
-                        char marker = ' ';
-
-                        if (job.jobNumber == currentJobNumber) {
-                            marker = '+';
-                        } else if (job.jobNumber == previousJobNumber) {
-                            marker = '-';
-                        }
-
-                        System.out.printf("[%d]%c  %-24s%s%n",
+                        System.out.printf("[%d]%c  %-24s%s &%n",
                                 job.jobNumber,
                                 marker,
                                 "Running",
                                 job.command);
+                    } else {
+                        System.out.printf("[%d]%c  %-24s%s%n",
+                                job.jobNumber,
+                                marker,
+                                "Done",
+                                job.command);
+
+                        completedJobs.add(job);
                     }
                 }
+
+                jobs.removeAll(completedJobs);
             } else {    // External command
                 File executable = findExecutable(command);
 
@@ -230,7 +242,7 @@ public class Main {
                             nextJobNumber
                     );
                     if (background && process != null) {
-                        String jobCommand = String.join(" ", commandParts) + " &";
+                        String jobCommand = String.join(" ", commandParts);
                         jobs.add(new Job(nextJobNumber, process, jobCommand));
                         nextJobNumber++;
                     }
