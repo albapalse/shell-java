@@ -160,10 +160,11 @@ public class Main {
                     currentDirectory = targetDirectory;
                 } else {
                     System.out.println("cd: " + targetPath + ": No such file or directory");
-                } else if (command.equals("jobs")) {
-                    // No output for now.
+
                 }
 
+            } else if (command.equals("jobs")) {
+                // No output for now.
 
             } else {    // External command
                 File executable = findExecutable(command);
