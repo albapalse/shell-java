@@ -195,9 +195,24 @@ public class Main {
                 }
 
             } else if (command.equals("jobs")) {
+                int currentJobNumber = nextJobNumber - 1;
+                int previousJobNumber = nextJobNumber - 2;
+
                 for (Job job : jobs) {
                     if (job.process.isAlive()) {
-                        System.out.printf("[%d]+  %-24s%s%n", job.jobNumber, "Running", job.command);
+                        char marker = ' ';
+
+                        if (job.jobNumber == currentJobNumber) {
+                            marker = '+';
+                        } else if (job.jobNumber == previousJobNumber) {
+                            marker = '-';
+                        }
+
+                        System.out.printf("[%d]%c  %-24s%s%n",
+                                job.jobNumber,
+                                marker,
+                                "Running",
+                                job.command);
                     }
                 }
             } else {    // External command
