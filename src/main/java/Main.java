@@ -7,11 +7,27 @@ import java.util.List;
 import java.nio.file.StandardOpenOption;
 
 public class Main {
+
+
+    private static class Job {
+        final int jobNumber;
+        final Process process;
+        final String command;
+
+        Job(int jobNumber, Process process, String command) {
+            this.jobNumber = jobNumber;
+            this.process = process;
+            this.command = command;
+        }
+    }
+
+
     public static void main(String[] args) throws IOException {
         Scanner scanner = new Scanner(System.in);
 
         File currentDirectory = new File(System.getProperty("user.dir"));
         int nextJobNumber = 1;
+        List<Job> jobs = new ArrayList<>();
 
         while (true) {
             System.out.print("$ ");
@@ -179,15 +195,28 @@ public class Main {
                 }
 
             } else if (command.equals("jobs")) {
-                // No output for now.
-
+                for (Job job : jobs) {
+                    if (job.process.isAlive()) {
+                        System.out.printf("[%d]+  %-24s%s%n", job.jobNumber, "Running", job.command);
+                    }
+                }
             } else {    // External command
                 File executable = findExecutable(command);
 
                 if (executable != null) {
-                    runExternalCommand(commandParts, currentDirectory, stdoutFile, stderrFile, appendStdout, appendStderr, background, nextJobNumber);
-
-                    if (background) {
+                    Process process = runExternalCommand(
+                            commandParts,
+                            currentDirectory,
+                            stdoutFile,
+                            stderrFile,
+                            appendStdout,
+                            appendStderr,
+                            background,
+                            nextJobNumber
+                    );
+                    if (background && process != null) {
+                        String jobCommand = String.join(" ", commandParts) + " &";
+                        jobs.add(new Job(nextJobNumber, process, jobCommand));
                         nextJobNumber++;
                     }
 
@@ -225,7 +254,7 @@ public class Main {
     }
 
     // Runs an external program with its arguments
-    private static void runExternalCommand(
+    private static Process runExternalCommand(
             String[] parts,
             File currentDirectory,
             File stdoutFile,
@@ -268,8 +297,12 @@ public class Main {
             } else {
                 process.waitFor();
             }
+
+            return process;
+
         } catch (Exception e) {
             System.err.println("Error running command: " + e.getMessage());
+            return null;
         }
     }
 
@@ -326,4 +359,5 @@ public class Main {
 
         return arguments.toArray(new String[0]);
     }
+
 }
