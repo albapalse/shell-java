@@ -197,8 +197,17 @@ public class Main {
             } else if (command.equals("jobs")) {
                 List<Job> completedJobs = new ArrayList<>();
 
-                int currentJobNumber = nextJobNumber - 1;
-                int previousJobNumber = nextJobNumber - 2;
+                int currentJobNumber = -1;
+                int previousJobNumber = -1;
+
+                for (Job job : jobs) {
+                    if (job.jobNumber > currentJobNumber) {
+                        previousJobNumber = currentJobNumber;
+                        currentJobNumber = job.jobNumber;
+                    } else if (job.jobNumber > previousJobNumber) {
+                        previousJobNumber = job.jobNumber;
+                    }
+                }
 
                 for (Job job : jobs) {
                     char marker = ' ';
@@ -227,6 +236,7 @@ public class Main {
                 }
 
                 jobs.removeAll(completedJobs);
+
             } else {    // External command
                 File executable = findExecutable(command);
 
@@ -256,7 +266,7 @@ public class Main {
 
     // Checks if a command is implemented inside our shell
     private static boolean isBuiltin(String command) {
-        return command.equals("echo") || command.equals("exit") || command.equals("type")|| command.equals("pwd") || command.equals("cd") || command.equals("jobs");
+        return command.equals("echo") || command.equals("exit") || command.equals("type") || command.equals("pwd") || command.equals("cd") || command.equals("jobs");
     }
 
     // Searches for a command in PATH
