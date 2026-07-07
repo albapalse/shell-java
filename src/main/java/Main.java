@@ -11,7 +11,7 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
 
         File currentDirectory = new File(System.getProperty("user.dir"));
-
+        int nextJobNumber = 1;
 
         while (true) {
             System.out.print("$ ");
@@ -24,6 +24,21 @@ public class Main {
 
             // Split the input into command and arguments
             String[] parts = parseArguments(input);
+
+
+            boolean background = false;
+
+            if (parts.length > 0 && parts[parts.length - 1].equals("&")) {
+                background = true;
+
+                String[] withoutAmpersand = new String[parts.length - 1];
+
+                for (int i = 0; i < withoutAmpersand.length; i++) {
+                    withoutAmpersand[i] = parts[i];
+                }
+
+                parts = withoutAmpersand;
+            }
 
 
             int redirectIndex = -1;
@@ -170,7 +185,12 @@ public class Main {
                 File executable = findExecutable(command);
 
                 if (executable != null) {
-                    runExternalCommand(commandParts, currentDirectory, stdoutFile, stderrFile, appendStdout, appendStderr);
+                    runExternalCommand(commandParts, currentDirectory, stdoutFile, stderrFile, appendStdout, appendStderr, background, nextJobNumber);
+
+                    if (background) {
+                        nextJobNumber++;
+                    }
+
                 } else {
                     System.out.println(command + ": command not found");
                 }
@@ -211,7 +231,9 @@ public class Main {
             File stdoutFile,
             File stderrFile,
             boolean appendStdout,
-            boolean appendStderr
+            boolean appendStderr,
+            boolean background,
+            int jobNumber
     ) {
         try {
             ProcessBuilder processBuilder = new ProcessBuilder(parts);
@@ -240,8 +262,12 @@ public class Main {
             }
 
             Process process = processBuilder.start();
-            process.waitFor();
 
+            if (background) {
+                System.out.println("[" + jobNumber + "] " + process.pid());
+            } else {
+                process.waitFor();
+            }
         } catch (Exception e) {
             System.err.println("Error running command: " + e.getMessage());
         }
